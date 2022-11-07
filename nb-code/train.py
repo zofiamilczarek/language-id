@@ -57,7 +57,7 @@ def train(corpus,labels,n,langids):
     Takes in:
     corpus: the training corpus
     labels: the lables for the training corpus
-    n: the n-gram length
+    n: the n-gram length 
     Returns:
     p: logprior dictionary
     l: loglikelihoods dictionary
@@ -68,7 +68,7 @@ def train(corpus,labels,n,langids):
     return p,l
 
 
-def save_to_json(corpus,labels,n,langids):
+def save_to_json(dictionary,filename):
     """
     Takes in:
     corpus: the training corpus
@@ -77,21 +77,40 @@ def save_to_json(corpus,labels,n,langids):
 
     Saves the logprior and loglikelihoods to json file
     """
-    foldername="json_dicts/"
-    p,l=train(corpus,labels,n,langids)
-    utils.dict_to_json(foldername+"priors.json",p)
-    utils.dict_to_json(foldername+"likelihoods.json",l)
+    foldername="nb-code/json_dicts/"
+    utils.dict_to_json(foldername+filename+".json",dictionary)
+
+def create_trained_data(langids):
+    #eng_corpus = utils.file2sentences("corpi/eng.txt")
+    #fr_corpus = utils.file2sentences('corpi/fr.txt')
+    #pl_corpus = utils.file2sentences('corpi/pl.txt')
+
+    #a list of where each entry is a lang corpus : like eng corpus
+    language_corpi = {}
+    corpus=[]
+    labels=[]
+    for lang in langids:
+        filename = 'nb-code/corpi/'+lang+'.txt'
+        language_corpi[lang] = utils.file2sentences(filename)
+        corpus=corpus+language_corpi[lang]
+        labels=labels+[lang]*len(language_corpi[lang])
+    labels = np.array(labels)
+    corpus = np.array(corpus)
+
+    print(language_corpi.keys())
+
+    corpus_train, _, label_train, _ = train_test_split(corpus, labels, test_size=0.12, random_state=42)
+    
+    p,l=train(corpus,labels,2,langids)
+    save_to_json(p,"priors")
+    save_to_json(l,"likelihoods")
+    return p,l
+    
+
+
 
 LANGUAGES = ["eng","fr","pl"]
-
-eng_corpus = utils.file2sentences('corpi/english.txt')
-fr_corpus = utils.file2sentences('corpi/french.txt')
-pl_corpus = utils.file2sentences('corpi/polish.txt')
-
-corpus = np.array(eng_corpus+fr_corpus+pl_corpus)
-labels = np.array(['eng']*len(eng_corpus)+['fr']*len(fr_corpus)+['pl']*len(pl_corpus))
-
-corpus_train, corpus_test, label_train, label_test = train_test_split(corpus, labels, test_size=0.15, random_state=42)
+#create_trained_data(LANGUAGES)
 
 
-save_to_json(corpus_train,label_train,2,LANGUAGES)
+

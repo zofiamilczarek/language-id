@@ -5,59 +5,9 @@ import math
 import numpy as np
 from sklearn.model_selection import train_test_split
 from utils import *
-
+import train
 
 LANGUAGES = ["eng","fr","pl"]
-
-
-def count_ngrams_in_lang(freqs,langid):
-    """
-    Takes in:
-    freqs: dictionary of ngram frequencies,
-    langid: language id
-
-    Returns:
-    n : the number of entries with that langid in freqs
-    """
-    n = len([key for key in freqs.keys() if key[1]==langid])
-    return n
-
-# log(P(lang))
-def logpriors(freqs,langids=LANGUAGES):
-    """
-    Takes in:
-    freqs: dictionary of ngram frequencies,
-    langids: list of language ids
-
-    returns:
-    p = dictionary with entries (langid):probability
-    """
-    prob ={}
-    count = {}
-    all_pairs = len(freqs)
-    for id in langids:
-        count[id]=count_ngrams_in_lang(freqs,id)
-        prob[id] = math.log(count[id]/all_pairs)
-    return prob,count
-
-#loglikelihood is log(P(gram|lang))
-def loglikelihoods(freqs, langids=LANGUAGES):
-    """
-    Takes in:
-    freqs: dictionary of ngram frequencies,
-    langid: list of language ids
-
-    Returns:
-    l = dictionary with entries (ngram,langid):likelihood
-    """
-    _,p = logpriors(freqs,langids=LANGUAGES)
-    l = {}
-    for key in freqs.keys():
-        _,id = key
-        #print(p[id])
-        likelihood=freqs[key]/p[id]
-        l[key]=math.log(likelihood)
-    return l
 
 
 #log(P(L))=log(P(langid))+log(P(gram-1|langid))+...+log(P(gram-n|langid))
@@ -69,7 +19,6 @@ def probability(text,langid,priors,likelihoods):
     Returns:
     prob: the logprobability of the text being in that language
     """
-    #print(likelihoods)
     logprob = priors[langid]
     for gram in text:
         key = (gram,langid)
@@ -84,24 +33,12 @@ def get_key(dict,val):
  
     return "key doesn't exist"
 
-
-def train(corpus,labels,n,langids=LANGUAGES):
-    """
-    Takes in:
-    corpus: the training corpus
-    labels: the lables for the training corpus
-    n: the n-gram length
-    Returns:
-    p: logprior dictionary
-    l: loglikelihoods dictionary
-    """
-    freqs=count_frequencies(corpus,labels,n)
-    p,_ = logpriors(freqs)
-    l = loglikelihoods(freqs) 
+def get_trained_data():
+    p = load_from_json("nb-code/json_dicts/priors.json")
+    l = load_from_json("nb-code/json_dicts/likelihoods.json")
     return p,l
 
-
-def predict(text,priors,likelihoods,langids=LANGUAGES):
+def predict(text,train_alg=False,langids=LANGUAGES):
     """
     Takes in:
     text: text in the form of a sentence strings
@@ -111,6 +48,13 @@ def predict(text,priors,likelihoods,langids=LANGUAGES):
     Returns:
     lang: what language it is
     """
+    priors = {}
+    likelihoods = {}
+    if train_alg:
+        priors,likelihoods = train.create_trained_data(langids)
+    else:
+        priors,likelihoods = get_trained_data()
+
     grams = n_gramify(text,2)
     probabilities = {}
     for id in langids:
@@ -123,7 +67,7 @@ def predict(text,priors,likelihoods,langids=LANGUAGES):
 
 def test_alg(corpus,labels,langids=LANGUAGES):
     corpus_train, corpus_test, label_train, label_test = train_test_split(corpus, labels, test_size=0.30, random_state=42)
-    priors,likelihoods = train(corpus_train,label_train,2)
+    priors,likelihoods = train.train(corpus_train,label_train,2)
     count_hits=0
     count_miss=0
     for sentence,label in zip(corpus_test,label_test):
@@ -133,6 +77,8 @@ def test_alg(corpus,labels,langids=LANGUAGES):
         else:
             count_miss+=1
     return count_hits/len(corpus_test)
+
+
 
 
 
@@ -149,16 +95,16 @@ DONE:
     - 
 -> make training function
 -> make algo more effective so that incorporates more ngrams
-
+->divide into modules
+    -make a function for prediction with and without training
+    -always load from the json dicts
 
 TODO:
 ->add more languages
 ->add bigger datasets
-->divide into modules
-    -make a function for prediction with and without training
-    -always load from the json dicts
 ->unknown language - what to do to classify into the unknown class (threshhold)
 ->print confusion matrix
+->
 
 
 
@@ -171,29 +117,13 @@ prediction is L from the highest log(P(L))
 """
 
 
-eng_corpus = file2sentences('corpi/english.txt')
-fr_corpus = file2sentences('corpi/french.txt')
-pl_corpus = file2sentences('corpi/polish.txt')
-
-
-
-corpus = np.array(eng_corpus+fr_corpus+pl_corpus)
-labels = np.array(['eng']*len(eng_corpus)+['fr']*len(fr_corpus)+['pl']*len(pl_corpus))
-
-corpus_train, corpus_test, label_train, label_test = train_test_split(corpus, labels, test_size=0.15, random_state=42)
-
-
-priors,likelihoods = train(corpus_train,label_train,2)
-
 msg1 = "Jestem Zofia i pochodzę z Warszawy. Lubię grać w piłkę i jeść zupę. Moja mama jest nauczycielka"
 msg2 = "Every shade of light and dark, of truth, and of fiction which is the veil of truth, is allowable in a work of philosophical imagination. It is not all on the same plane; it easily passes from ideas to myths and fancies, from facts to figures of speech. It is not prose but poetry, at least a great part of it, and ought not to be judged by the rules of logic or the probabilities of history. The writer is not fashioning his ideas into an artistic whole; they take possession of him and are too much for him."
 msg3 = "Bonjour, je suis Zoé et je veux vous présenter mon chat. Il s'appelle Poireau et a une très belle fourrure. J'adore le caresser toute la journée, c'est vraiment un petit gars génial."
 
-msg = "Herzlichen Glueckwunsch zum Geburtstag :)"
+msg = "Siema dupo co tam"
 
-#print(test_alg(corpus,labels))
-
-print("The language is: "+str(predict(msg,priors,likelihoods)))
+print("The language is: "+str(predict(msg,langids=LANGUAGES)))
 
 
 
