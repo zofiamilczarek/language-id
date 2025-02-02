@@ -1,2 +1,2 @@
 # language-id
-A repository with my code written for a project at University of Luxembourg about language identification
+A repository of a project about language identification that I completed while at University of Luxembourg. It is mainly a re-implementation of the Complement Naive Bayes algorithm for multi-class classification as presented in “Tackling the poor assumptions of naive bayes text classifiers” by J. D. M. Rennie, L. Shih, J. Teevan, and D. R. Karger. (https://people.csail.mit.edu/jrennie/papers/icml03-nb.pdf). The algorithm is applied to language identification of 20 languages taken from https://huggingface.co/datasets/papluca/language-identification. The model achieves 99\% accuracy.
