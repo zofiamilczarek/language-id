@@ -80,66 +80,19 @@ def test_alg(corpus,labels,langids=LANGUAGES):
 
 
 
-
-
-
 """
-DONE:
-
--> make dict with probabilities P(gram|fr):0.02 -> DONE
--> make dict with probabilities P(fr):0.25 -> DONE
--> make prediction func P(L):
-    - gramifies the input text
-    - uses the training data
-    - if gram,lang pair not in training data - ignore
-    - 
--> make training function
--> make algo more effective so that incorporates more ngrams
-->divide into modules
-    -make a function for prediction with and without training
-    -always load from the json dicts
-
-TODO:
-->add more languages
-->add bigger datasets
-->unknown language - what to do to classify into the unknown class (threshhold)
-->print confusion matrix
-->
-
-
 
 P(L)=P(langid|text) = P(langid)*P(gram-1|langid)*...*P(gram-n|langid)
 log(P(L))=log(P(langid))+log(P(gram-1|langid))+...+log(P(gram-n|langid))
 
 compute log(P(L)) for each language 
 prediction is L from the highest log(P(L))
-
 """
 
 
-msg1 = "Jestem Zofia i pochodzę z Warszawy. Lubię grać w piłkę i jeść zupę. Moja mama jest nauczycielka"
+msg = "Jestem Zofia i pochodzę z Warszawy. Lubię grać w piłkę i jeść zupę. Moja mama jest nauczycielka"
 msg2 = "Every shade of light and dark, of truth, and of fiction which is the veil of truth, is allowable in a work of philosophical imagination. It is not all on the same plane; it easily passes from ideas to myths and fancies, from facts to figures of speech. It is not prose but poetry, at least a great part of it, and ought not to be judged by the rules of logic or the probabilities of history. The writer is not fashioning his ideas into an artistic whole; they take possession of him and are too much for him."
 msg3 = "Bonjour, je suis Zoé et je veux vous présenter mon chat. Il s'appelle Poireau et a une très belle fourrure. J'adore le caresser toute la journée, c'est vraiment un petit gars génial."
 
-msg = "Siema dupo co tam"
-
 print("The language is: "+str(predict(msg,langids=LANGUAGES)))
 
-
-
-
-"""
-freqs = count_frequencies(corpus_train,label_train)
-
-n_fr =count_ngrams_in_lang(freqs,"fr")
-n_pl = count_ngrams_in_lang(freqs,"pl")
-n_en =count_ngrams_in_lang(freqs,"eng")
-
-print("fr ngrams: "+str(n_fr))
-print("pl ngrams: "+str(n_pl))
-print("en ngrams: "+str(n_en))
-print("sum ngrams: "+str(n_en+n_fr+n_pl))
-print("all ngrams: "+str(len(freqs)))
-print("P(langids) dict: "+str(logpriors(freqs)))
-print(loglikelihoods(freqs))
-"""
